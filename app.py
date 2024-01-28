@@ -27,8 +27,8 @@ def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--device", type=int, default=0)
-    parser.add_argument("--width", help='cap width', type=int, default=960)
-    parser.add_argument("--height", help='cap height', type=int, default=540)
+    parser.add_argument("--width", help='cap width', type=int, default=1920)
+    parser.add_argument("--height", help='cap height', type=int, default=1080)
 
     parser.add_argument('--use_static_image_mode', action='store_true')
     parser.add_argument("--min_detection_confidence",
@@ -53,13 +53,7 @@ def getSceneList():
 
 def getSceneItemList(name):
     global items
-# Set the sceneName parameter
     response = client.call(requests.GetSceneItemList(sceneName=name))
-
-    # response = client.call(requests.GetSceneItemList(**{"sceneName": name}))
-
-    # Check and print the full response for debugging
-    print(f"Response for scene '{name}': {response.status}, {response.datain}")
 
     # Check if the 'sceneItems' key exists in the response
     if 'sceneItems' in response.datain:
@@ -206,6 +200,7 @@ def main():
                     handedness,
                     keypoint_classifier_labels[hand_sign_id],
                     point_history_classifier_labels[most_common_fg_id[0][0]],
+                    landmark_list
                 )
         else:
             point_history.append([0, 0])
@@ -433,89 +428,70 @@ def draw_landmarks(image, landmark_point):
 
     # Key Points
     for index, landmark in enumerate(landmark_point):
-        if index == 0:  # 手首1
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 0:  # Wrist 1
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 1:  # 手首2
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+            print("index: ", index)
+        if index == 1:  # Wrist 2
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 2:  # 親指：付け根
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 2:  # Thumb: Base
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 3:  # 親指：第1関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 3:  # Thumb: First Joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 4:  # 親指：指先
+        if index == 4:  # Thumb: Tip
+            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
+        if index == 5:  # Index Finger: Base
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
+        if index == 6:  # Index Finger: Second Joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
+        if index == 7:  # Index Finger: First Joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
+        if index == 8:  # Index Finger: Tip
+            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
+        if index == 9:  # Middle Finger: Base
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
+        if index == 10:  # Middle Finger: Second Joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
+        if index == 11:  # Middle Finger: First Joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
+            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
+        if index == 12:  # Middle Finger: Tip
             cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
-        if index == 5:  # 人差指：付け根
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 13:  # Ring finger: base
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 6:  # 人差指：第2関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 14:  # Ring finger: second joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 7:  # 人差指：第1関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 15:  # Ring finger: first joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 8:  # 人差指：指先
-            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
-                      -1)
+        if index == 16:  # Ring finger: fingertip
+            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
-        if index == 9:  # 中指：付け根
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 17:  # Little finger: base
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 10:  # 中指：第2関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 18:  # Little finger: second joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 11:  # 中指：第1関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
+        if index == 19:  # Little finger: first joint
+            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 12:  # 中指：指先
-            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
-        if index == 13:  # 薬指：付け根
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 14:  # 薬指：第2関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 15:  # 薬指：第1関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 16:  # 薬指：指先
-            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
-        if index == 17:  # 小指：付け根
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 18:  # 小指：第2関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 19:  # 小指：第1関節
-            cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
-                      -1)
-            cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 20:  # 小指：指先
-            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
-                      -1)
+        if index == 20:  # Little finger: fingertip
+            cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
 
     return image
@@ -531,7 +507,7 @@ def draw_bounding_rect(use_brect, image, brect):
 
 
 def draw_info_text(image, brect, handedness, hand_sign_text,
-                   finger_gesture_text):
+                   finger_gesture_text, landmarks):
     cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[1] - 22),
                  (0, 0, 0), -1)
 
@@ -547,6 +523,17 @@ def draw_info_text(image, brect, handedness, hand_sign_text,
         cv.putText(image, "Finger Gesture:" + finger_gesture_text, (10, 60),
                    cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2,
                    cv.LINE_AA)
+
+    if "open" in info_text.lower():
+        pos_x = landmarks[4][0]
+        pos_y = landmarks[4][1]
+        response = client.call(requests.SetSceneItemTransform(sceneItemTransform={"positionX": pos_x, "positionY": pos_y}, sceneName=scenes[0]["sceneName"], sceneItemId=items[3]['sceneItemId']))
+        print(response)
+        client.call(requests.SetSceneItemEnabled(sceneItemId=items[3]['sceneItemId'], sceneName=scenes[0]["sceneName"], sceneItemEnabled=True))
+
+
+
+
 
     return image
 
