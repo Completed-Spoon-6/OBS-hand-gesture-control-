@@ -15,6 +15,13 @@ from utils import CvFpsCalc
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
 
+from obswebsocket import obsws, requests
+
+obs_ws_url = "192.168.1.169"
+password = "M7AB9GXvWAXRPtHP"
+global scenes
+global items
+client = obsws(obs_ws_url, 4455, password)
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -37,8 +44,40 @@ def get_args():
 
     return args
 
+def getSceneList():
+    global scenes
+    data = client.call(requests.GetSceneList())
+    print(data)
+
+    scenes = data.datain['scenes']
+
+def getSceneItemList(name):
+    global items
+# Set the sceneName parameter
+    response = client.call(requests.GetSceneItemList(sceneName=name))
+
+    # response = client.call(requests.GetSceneItemList(**{"sceneName": name}))
+
+    # Check and print the full response for debugging
+    print(f"Response for scene '{name}': {response.status}, {response.datain}")
+
+    # Check if the 'sceneItems' key exists in the response
+    if 'sceneItems' in response.datain:
+        items = response.datain['sceneItems']
+        print(f"Items for scene '{name}': {items}")
+    else:
+        print(f"No items found for scene '{name}', or an error occurred.")
+
 
 def main():
+    # OBS WebSocket Connection
+
+    client.connect()
+    getSceneList()
+
+    for scene in scenes:
+        getSceneItemList(scene['sceneName'])
+
     # Argument parsing #################################################################
     args = get_args()
 
@@ -61,7 +100,7 @@ def main():
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands(
         static_image_mode=use_static_image_mode,
-        max_num_hands=1,
+        max_num_hands=2,
         min_detection_confidence=min_detection_confidence,
         min_tracking_confidence=min_tracking_confidence,
     )
