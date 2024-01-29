@@ -7,6 +7,7 @@ import itertools
 from collections import Counter
 from collections import deque
 import tkinter as tk
+from tkinter import ttk
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
@@ -20,10 +21,12 @@ from obswebsocket import obsws, requests
 
 global scenes
 global items
+global actions
 global keypoint_classifier
 global keypoint_classifier_labels
 global root
-
+items = {}
+actions = {}
 def get_args():
     parser = argparse.ArgumentParser()
 
@@ -45,7 +48,7 @@ def get_args():
 
     return args
 
-def getLabels():
+def get_labels():
     global keypoint_classifier
     global keypoint_classifier_labels
     keypoint_classifier = KeyPointClassifier()
@@ -58,16 +61,48 @@ def getLabels():
             row[0] for row in keypoint_classifier_labels
         ]
 
-def show_label_screen():
-    # Assuming getLabels() updates keypoint_classifier_labels
-    getLabels()
-    root.title("Label List")
-    # Display labels in a Listbox (or you could use Labels)
-    listbox = tk.Listbox(root)
-    listbox.pack(fill=tk.BOTH, expand=True)
+def show_item_details(item_name, scene_name, label):
+    item = next((item for item in items[scene_name] if item['sourceName'] == item_name), None)
+    if item is None:
+        return  # Item not found
 
-    for label in keypoint_classifier_labels:
-        listbox.insert(tk.END, label)
+    detail_window = tk.Toplevel()
+    detail_window.title(f"{label} - {scene_name} - {item_name}")
+
+    # Show and hide scene
+    tk.Label(detail_window, text="sceneItemEnabled").grid(row=0, column=0)
+    tk.Checkbutton(detail_window,
+                   variable=tk.BooleanVar(value=item.get('sceneItemEnabled', False))).grid(row=0, column=1)
+
+    for i, (key, value) in enumerate(item['sceneItemTransform'].items()):
+        tk.Label(detail_window, text=f"{key}:").grid(row=i+1, column=0)
+        if isinstance(value, bool):
+            var = tk.BooleanVar(value=value)
+            tk.Checkbutton(detail_window, variable=var).grid(row=i+1, column=1)
+        else:
+            tk.Entry(detail_window, textvariable=tk.StringVar(value=str(value))).grid(row=i+1, column=1)
+
+def show_label_screen():
+    get_labels()
+    root.title("Label List")
+
+    for i, label in enumerate(keypoint_classifier_labels):
+        tk.Label(root, text=label).grid(row=i, column=0)
+
+        combobox_items = [f"{scene_name} - {item['sourceName']}" for scene_name, scene_items in items.items() for item in scene_items]
+
+        combobox = ttk.Combobox(root, values=combobox_items)
+        combobox.grid(row=i, column=1)
+
+        btn = tk.Button(root, text="Select values on trigger", command=lambda c=combobox: on_button_click(c, label))
+        btn.grid(row=i, column=2)
+
+def on_button_click(combobox, label):
+    selected = combobox.get()
+    if selected:
+        selected = selected.replace("-", "")
+        scene_name, item_name = selected.split(maxsplit=1)
+        show_item_details(item_name, scene_name, label)
 
 def intialize_camera():
     args = get_args()
@@ -173,7 +208,7 @@ def getSceneItemList(name):
 
     # Check if the 'sceneItems' key exists in the response
     if 'sceneItems' in response.datain:
-        items = response.datain['sceneItems']
+        items[name] = response.datain['sceneItems']
         print(f"Items for scene '{name}': {items}")
     else:
         print(f"No items found for scene '{name}', or an error occurred.")
@@ -189,7 +224,6 @@ def on_connect():
     client = obsws(ip, port, password)
     client.connect()
     getSceneList()
-
     for scene in scenes:
         getSceneItemList(scene['sceneName'])
 
