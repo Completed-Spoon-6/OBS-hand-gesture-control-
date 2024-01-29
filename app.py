@@ -11,13 +11,10 @@ from tkinter import ttk
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
-
 from utils import CvFpsCalc
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
-
 from obswebsocket import obsws, requests
-
 
 global scenes
 global items
@@ -27,6 +24,7 @@ global keypoint_classifier_labels
 global root
 items = {}
 actions = {}
+
 def get_args():
     parser = argparse.ArgumentParser()
 
@@ -61,6 +59,23 @@ def get_labels():
             row[0] for row in keypoint_classifier_labels
         ]
 
+def save_action(label, scene_name, detail_window, item, widgets):
+    # Update item data from widgets
+    item['sceneItemEnabled'] = widgets['sceneItemEnabled'].get()
+    item['scene_name'] = scene_name
+    for key in item['sceneItemTransform']:
+        widget = widgets[key]
+        if isinstance(widget, tk.BooleanVar):
+            item['sceneItemTransform'][key] = widget.get()
+        else:  # Assuming it's an Entry widget
+            value = widget.get()
+            # Convert to appropriate type if necessary
+            item['sceneItemTransform'][key] = float(value) if value.replace('.', '', 1).isdigit() else value
+
+    # Save the updated item to the actions dictionary
+    actions[label] = item
+    detail_window.destroy()
+
 def show_item_details(item_name, scene_name, label):
     item = next((item for item in items[scene_name] if item['sourceName'] == item_name), None)
     if item is None:
@@ -69,18 +84,28 @@ def show_item_details(item_name, scene_name, label):
     detail_window = tk.Toplevel()
     detail_window.title(f"{label} - {scene_name} - {item_name}")
 
+    widgets = {}
+
     # Show and hide scene
     tk.Label(detail_window, text="sceneItemEnabled").grid(row=0, column=0)
-    tk.Checkbutton(detail_window,
-                   variable=tk.BooleanVar(value=item.get('sceneItemEnabled', False))).grid(row=0, column=1)
+    sceneItemEnabled_var = tk.BooleanVar(value=item.get('sceneItemEnabled', False))
+    widgets['sceneItemEnabled'] = sceneItemEnabled_var
+    tk.Checkbutton(detail_window, variable=sceneItemEnabled_var).grid(row=0, column=1)
 
-    for i, (key, value) in enumerate(item['sceneItemTransform'].items()):
-        tk.Label(detail_window, text=f"{key}:").grid(row=i+1, column=0)
+    for i, (key, value) in enumerate(item['sceneItemTransform'].items(), start=1):
+        tk.Label(detail_window, text=f"{key}:").grid(row=i, column=0)
         if isinstance(value, bool):
             var = tk.BooleanVar(value=value)
-            tk.Checkbutton(detail_window, variable=var).grid(row=i+1, column=1)
+            widgets[key] = var
+            tk.Checkbutton(detail_window, variable=var).grid(row=i, column=1)
         else:
-            tk.Entry(detail_window, textvariable=tk.StringVar(value=str(value))).grid(row=i+1, column=1)
+            var = tk.StringVar(value=str(value))
+            widgets[key] = var
+            tk.Entry(detail_window, textvariable=var).grid(row=i, column=1)
+
+    # Save and Cancel buttons
+    tk.Button(detail_window, text="Save", command=lambda: save_action(label, scene_name, detail_window, item, widgets)).grid(row=len(item['sceneItemTransform']) + 1, column=0)
+    tk.Button(detail_window, text="Cancel", command=detail_window.destroy).grid(row=len(item['sceneItemTransform']) + 1, column=1)
 
 def show_label_screen():
     get_labels()
