@@ -6,7 +6,7 @@ import argparse
 import itertools
 from collections import Counter
 from collections import deque
-
+import tkinter as tk
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
@@ -17,11 +17,12 @@ from model import PointHistoryClassifier
 
 from obswebsocket import obsws, requests
 
-obs_ws_url = "192.168.1.169"
-password = "M7AB9GXvWAXRPtHP"
+
 global scenes
 global items
-client = obsws(obs_ws_url, 4455, password)
+global keypoint_classifier
+global keypoint_classifier_labels
+global root
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -44,35 +45,31 @@ def get_args():
 
     return args
 
-def getSceneList():
-    global scenes
-    data = client.call(requests.GetSceneList())
-    print(data)
+def getLabels():
+    global keypoint_classifier
+    global keypoint_classifier_labels
+    keypoint_classifier = KeyPointClassifier()
 
-    scenes = data.datain['scenes']
+    # Read labels ###########################################################
+    with open('model/keypoint_classifier/keypoint_classifier_label.csv',
+              encoding='utf-8-sig') as f:
+        keypoint_classifier_labels = csv.reader(f)
+        keypoint_classifier_labels = [
+            row[0] for row in keypoint_classifier_labels
+        ]
 
-def getSceneItemList(name):
-    global items
-    response = client.call(requests.GetSceneItemList(sceneName=name))
+def show_label_screen():
+    # Assuming getLabels() updates keypoint_classifier_labels
+    getLabels()
+    root.title("Label List")
+    # Display labels in a Listbox (or you could use Labels)
+    listbox = tk.Listbox(root)
+    listbox.pack(fill=tk.BOTH, expand=True)
 
-    # Check if the 'sceneItems' key exists in the response
-    if 'sceneItems' in response.datain:
-        items = response.datain['sceneItems']
-        print(f"Items for scene '{name}': {items}")
-    else:
-        print(f"No items found for scene '{name}', or an error occurred.")
+    for label in keypoint_classifier_labels:
+        listbox.insert(tk.END, label)
 
-
-def main():
-    # OBS WebSocket Connection
-
-    # client.connect()
-    # getSceneList()
-    #
-    # for scene in scenes:
-    #     getSceneItemList(scene['sceneName'])
-
-    # Argument parsing #################################################################
+def intialize_camera():
     args = get_args()
 
     cap_device = args.device
@@ -99,20 +96,8 @@ def main():
         min_tracking_confidence=min_tracking_confidence,
     )
 
-    keypoint_classifier = KeyPointClassifier()
-
-    # Read labels ###########################################################
-    with open('model/keypoint_classifier/keypoint_classifier_label.csv',
-              encoding='utf-8-sig') as f:
-        keypoint_classifier_labels = csv.reader(f)
-        keypoint_classifier_labels = [
-            row[0] for row in keypoint_classifier_labels
-        ]
-
-
     # FPS Measurement ########################################################
     cvFpsCalc = CvFpsCalc(buffer_len=10)
-
 
     mode = 0
 
@@ -152,11 +137,8 @@ def main():
                 pre_processed_landmark_list = pre_process_landmark(
                     landmark_list)
 
-
                 # Hand sign classification
                 hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
-
-
 
                 # Drawing part
                 debug_image = draw_bounding_rect(use_brect, debug_image, brect)
@@ -178,6 +160,75 @@ def main():
     cap.release()
     cv.destroyAllWindows()
 
+def getSceneList():
+    global scenes
+    data = client.call(requests.GetSceneList())
+    print(data)
+
+    scenes = data.datain['scenes']
+
+def getSceneItemList(name):
+    global items
+    response = client.call(requests.GetSceneItemList(sceneName=name))
+
+    # Check if the 'sceneItems' key exists in the response
+    if 'sceneItems' in response.datain:
+        items = response.datain['sceneItems']
+        print(f"Items for scene '{name}': {items}")
+    else:
+        print(f"No items found for scene '{name}', or an error occurred.")
+
+def on_connect():
+    global client
+    # Connection logic
+    ip = ip_entry.get()
+    port = port_entry.get()
+    password = password_entry.get()
+
+    print(f"IP: {ip}, Port: {port}, Password: {password}")
+    client = obsws(ip, port, password)
+    client.connect()
+    getSceneList()
+
+    for scene in scenes:
+        getSceneItemList(scene['sceneName'])
+
+        # Clear existing widgets
+    for widget in root.winfo_children():
+        widget.destroy()
+    root.update()
+    show_label_screen()
+
+def create_gui():
+    global root
+    root = tk.Tk()
+    root.title("Connection GUI")
+
+    global ip_entry, port_entry, password_entry
+
+    tk.Label(root, text="IP:").grid(row=0, column=0)
+    ip_entry = tk.Entry(root)
+    ip_entry.grid(row=0, column=1)
+    ip_entry.insert(0, "192.168.1.169")
+
+
+    tk.Label(root, text="Port:").grid(row=1, column=0)
+    port_entry = tk.Entry(root)
+    port_entry.grid(row=1, column=1)
+    port_entry.insert(0, "4455")  # Default Port
+
+    tk.Label(root, text="Password:").grid(row=2, column=0)
+    password_entry = tk.Entry(root, show="*")
+    password_entry.grid(row=2, column=1)
+    password_entry.insert(0, "M7AB9GXvWAXRPtHP")  # Default Password
+
+    connect_button = tk.Button(root, text="Connect", command=on_connect)
+    connect_button.grid(row=3, column=1)
+
+    root.mainloop()
+
+def main():
+    create_gui()
 
 def select_mode(key, mode):
     number = -1
