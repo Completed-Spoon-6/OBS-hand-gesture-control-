@@ -1,0 +1,10 @@
+scenes = None
+items = {}
+actions = {}
+keypoint_classifier = None
+keypoint_classifier_labels = []
+root = None
+ip_entry = None
+port_entry = None
+password_entry = None
+client = None
