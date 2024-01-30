@@ -6,7 +6,7 @@ import state
 import obs_integration
 import utils_functions
 from camera import intialize_camera
-
+import const
 
 def create_gui():
     try:
@@ -41,23 +41,23 @@ def create_gui():
 
 def save_action(label, scene_name, detail_window, item, widgets):
     # Update item data from widgets
-    item['sceneItemEnabled'] = widgets['sceneItemEnabled'].get()
-    item['scene_name'] = scene_name
-    for key in item['sceneItemTransform']:
+    item[const.sceneItemEnabled] = widgets[const.sceneItemEnabled].get()
+    item[const.sceneName] = scene_name
+    for key in item[const.sceneItemTransform]:
         widget = widgets[key]
         if isinstance(widget, tk.BooleanVar):
-            item['sceneItemTransform'][key] = widget.get()
+            item[const.sceneItemTransform][key] = widget.get()
         else:  # Assuming it's an Entry widget
             value = widget.get()
             # Convert to appropriate type if necessary
-            item['sceneItemTransform'][key] = float(value) if value.replace('.', '', 1).isdigit() else value
+            item[const.sceneItemTransform][key] = float(value) if value.replace('.', '', 1).isdigit() else value
 
     # Save the updated item to the actions dictionary
     state.actions[label] = item
     detail_window.destroy()
 
 def show_item_details(item_name, scene_name, label):
-    item = next((item for item in state.items[scene_name] if item['sourceName'] == item_name), None)
+    item = next((item for item in state.items[scene_name] if item[const.sourceName] == item_name), None)
     if item is None:
         return  # Item not found
 
@@ -67,12 +67,12 @@ def show_item_details(item_name, scene_name, label):
     widgets = {}
 
     # Show and hide scene
-    tk.Label(detail_window, text="sceneItemEnabled").grid(row=0, column=0)
-    sceneItemEnabled_var = tk.BooleanVar(value=item.get('sceneItemEnabled', False))
-    widgets['sceneItemEnabled'] = sceneItemEnabled_var
+    tk.Label(detail_window, text="Show").grid(row=0, column=0)
+    sceneItemEnabled_var = tk.BooleanVar(value=item.get(const.sceneItemEnabled, False))
+    widgets[const.sceneItemEnabled] = sceneItemEnabled_var
     tk.Checkbutton(detail_window, variable=sceneItemEnabled_var).grid(row=0, column=1)
 
-    for i, (key, value) in enumerate(item['sceneItemTransform'].items(), start=1):
+    for i, (key, value) in enumerate(item[const.sceneItemTransform].items(), start=1):
         tk.Label(detail_window, text=f"{key}:").grid(row=i, column=0)
         if isinstance(value, bool):
             var = tk.BooleanVar(value=value)
@@ -84,8 +84,8 @@ def show_item_details(item_name, scene_name, label):
             tk.Entry(detail_window, textvariable=var).grid(row=i, column=1)
 
     # Save and Cancel buttons
-    tk.Button(detail_window, text="Save", command=lambda: save_action(label, scene_name, detail_window, item, widgets)).grid(row=len(item['sceneItemTransform']) + 1, column=0)
-    tk.Button(detail_window, text="Cancel", command=detail_window.destroy).grid(row=len(item['sceneItemTransform']) + 1, column=1)
+    tk.Button(detail_window, text="Save", command=lambda: save_action(label, scene_name, detail_window, item, widgets)).grid(row=len(item[const.sceneItemTransform]) + 1, column=0)
+    tk.Button(detail_window, text="Cancel", command=detail_window.destroy).grid(row=len(item[const.sceneItemTransform]) + 1, column=1)
 
 def show_label_screen():
     utils_functions.get_labels()
@@ -94,12 +94,13 @@ def show_label_screen():
     for i, label in enumerate(state.keypoint_classifier_labels):
         tk.Label(state.root, text=label).grid(row=i, column=0)
 
-        combobox_items = [f"{scene_name} - {item['sourceName']}" for scene_name, scene_items in state.items.items() for item in scene_items]
+        combobox_items = [f"{scene_name} - {item[const.sceneName]}" for scene_name, scene_items in state.items.items() for item in scene_items]
 
         combobox = ttk.Combobox(state.root, values=combobox_items)
         combobox.grid(row=i, column=1)
 
-        btn = tk.Button(state.root, text="Select values on trigger", command=lambda c=combobox: on_edit_button_click(c, label))
+        # Pass the current label as a default argument to the lambda
+        btn = tk.Button(state.root, text="Select values on trigger", command=lambda c=combobox, lbl=label: on_edit_button_click(c, lbl))
         btn.grid(row=i, column=2)
 
     start_btn = tk.Button(state.root, text="Start", command=intialize_camera)

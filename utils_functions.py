@@ -113,3 +113,14 @@ def get_labels():
         state.keypoint_classifier_labels = [
             row[0] for row in state.keypoint_classifier_labels
         ]
+
+def get_center_of_bounding_rect(palm, middle_finger_base):
+    # Extract the coordinates
+    x1, y1 = palm
+    x2, y2 = middle_finger_base
+
+    # Calculate the midpoint
+    mx = (x1 + x2) / 2
+    my = (y1 + y2) / 2
+
+    return (mx, my)

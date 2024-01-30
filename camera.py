@@ -3,6 +3,7 @@ import numpy as np
 import mediapipe as mp
 import copy
 
+import obs_integration
 import state
 from utils import CvFpsCalc
 from utils_functions import get_args
@@ -79,7 +80,7 @@ def intialize_camera():
 
                 # Hand sign classification
                 hand_sign_id = state.keypoint_classifier(pre_processed_landmark_list)
-
+                hand_sign_text = state.keypoint_classifier_labels[hand_sign_id]
                 # Drawing part
                 debug_image = draw_bounding_rect(use_brect, debug_image, brect)
                 debug_image = draw_landmarks(debug_image, landmark_list)
@@ -87,9 +88,11 @@ def intialize_camera():
                     debug_image,
                     brect,
                     handedness,
-                    state.keypoint_classifier_labels[hand_sign_id],
+                    hand_sign_text,
                     landmark_list
                 )
+
+                obs_integration.sendAction(hand_sign_text,landmark_list[0],landmark_list[9])
 
         debug_image = draw_info(debug_image, fps, mode, number)
 
@@ -202,7 +205,6 @@ def draw_landmarks(image, landmark_point):
         if index == 0:  # Wrist 1
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-            print("index: ", index)
         if index == 1:  # Wrist 2
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255), -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
@@ -272,7 +274,6 @@ def draw_bounding_rect(use_brect, image, brect):
         # Outer rectangle
         cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[3]),
                      (0, 0, 0), 1)
-
     return image
 
 def draw_info_text(image, brect, handedness, hand_sign_text, landmarks):
@@ -285,13 +286,7 @@ def draw_info_text(image, brect, handedness, hand_sign_text, landmarks):
     cv.putText(image, info_text, (brect[0] + 5, brect[1] - 4),
                cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
 
-    # if "open" in info_text.lower():
-    #     pos_x = landmarks[4][0]
-    #     pos_y = landmarks[4][1]
-    #     response = client.call(requests.SetSceneItemTransform(sceneItemTransform={"positionX": pos_x, "positionY": pos_y}, sceneName=scenes[0]["sceneName"], sceneItemId=items[3]['sceneItemId']))
-    #     print(response)
-    #     client.call(requests.SetSceneItemEnabled(sceneItemId=items[3]['sceneItemId'], sceneName=scenes[0]["sceneName"], sceneItemEnabled=True))
-    #
+
 
     return image
 
@@ -344,3 +339,4 @@ def calc_landmark_list(image, landmarks):
         landmark_point.append([landmark_x, landmark_y])
 
     return landmark_point
+
