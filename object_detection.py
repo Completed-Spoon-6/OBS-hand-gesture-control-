@@ -1,8 +1,11 @@
 from ultralytics import YOLO
 import cv2
 import math
+
+import state
+
 # start webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(state.camera_id)
 cap.set(3, 640)
 cap.set(4, 480)
 
@@ -22,8 +25,8 @@ classNames = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "trai
               "teddy bear", "hair drier", "toothbrush"
               ]
 
-
 while True:
+
     success, img = cap.read()
     if not success:
         print("Failed to capture image")
