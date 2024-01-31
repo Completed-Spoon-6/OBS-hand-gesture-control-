@@ -3,6 +3,7 @@ import copy
 import argparse
 import itertools
 import state
+import cv2
 from model import KeyPointClassifier
 
 def select_mode(key, mode):
@@ -124,3 +125,12 @@ def get_center_of_bounding_rect(palm, middle_finger_base):
     my = (y1 + y2) / 2
 
     return (mx, my)
+
+def list_available_cameras(max_tested=10):
+    available_cameras = []
+    for i in range(max_tested):
+        cap = cv2.VideoCapture(i)
+        if cap.isOpened():
+            available_cameras.append(f"Camera {i}")
+            cap.release()
+    return available_cameras

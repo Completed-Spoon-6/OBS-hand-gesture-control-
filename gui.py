@@ -94,7 +94,7 @@ def show_label_screen():
     for i, label in enumerate(state.keypoint_classifier_labels):
         tk.Label(state.root, text=label).grid(row=i, column=0)
 
-        combobox_items = [f"{scene_name} - {item[const.sceneName]}" for scene_name, scene_items in state.items.items() for item in scene_items]
+        combobox_items = [f"{scene_name} - {item[const.sourceName]}" for scene_name, scene_items in state.items.items() for item in scene_items]
 
         combobox = ttk.Combobox(state.root, values=combobox_items)
         combobox.grid(row=i, column=1)
@@ -105,6 +105,24 @@ def show_label_screen():
 
     start_btn = tk.Button(state.root, text="Start", command=intialize_camera)
     start_btn.grid(row=len(state.keypoint_classifier_labels), column=0)
+
+    # List available cameras
+    cameras = utils_functions.list_available_cameras()
+    camera_var = tk.StringVar(state.root)
+    camera_var.set(cameras[0])  # Set default value
+
+    # Update state.camera_id when selection changes
+    def on_camera_select(event):
+        camera_label = camera_var.get()
+        camera_id = int(camera_label.split(' ')[-1])  # Extract camera ID from label
+        state.camera_id = camera_id
+
+    camera_label = tk.Label(state.root, text="Select Camera:")
+    camera_label.grid(row=len(state.keypoint_classifier_labels), column=1)
+
+    camera_combobox = ttk.Combobox(state.root, values=cameras, textvariable=camera_var)
+    camera_combobox.grid(row=len(state.keypoint_classifier_labels) + 1, column=1)
+    camera_combobox.bind("<<ComboboxSelected>>", on_camera_select)
 
 def on_edit_button_click(combobox, label):
     selected = combobox.get()

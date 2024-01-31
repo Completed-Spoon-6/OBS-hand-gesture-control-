@@ -13,7 +13,7 @@ from utils_functions import pre_process_landmark
 def intialize_camera():
     args = get_args()
 
-    cap_device = args.device
+    cap_device = state.camera_id
     cap_width = args.width
     cap_height = args.height
 

@@ -8,3 +8,4 @@ ip_entry = None
 port_entry = None
 password_entry = None
 client = None
+camera_id = 0
