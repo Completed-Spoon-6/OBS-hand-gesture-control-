@@ -6,7 +6,7 @@ import copy
 import obs_integration
 import state
 from utils import CvFpsCalc
-from utils_functions import get_args
+from utils_functions import get_args, logging_csv
 from utils_functions import select_mode
 from utils_functions import pre_process_landmark
 
@@ -77,7 +77,8 @@ def intialize_camera():
                 # Conversion to relative coordinates / normalized coordinates
                 pre_processed_landmark_list = pre_process_landmark(
                     landmark_list)
-
+                logging_csv(number, mode, pre_processed_landmark_list,
+                            [])
                 # Hand sign classification
                 hand_sign_id = state.keypoint_classifier(pre_processed_landmark_list)
                 hand_sign_text = state.keypoint_classifier_labels[hand_sign_id]

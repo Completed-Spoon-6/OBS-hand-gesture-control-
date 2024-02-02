@@ -50,6 +50,9 @@ def sendAction(hand_sign_text, palm, middle_finger_base):
 
     if hand_sign_text in state.actions.keys():
         current_action = state.actions[hand_sign_text]
+        x = x-640
+        y = y-360
+
         scale_x = current_action[const.sceneItemTransform][const.scaleX]
         scale_y = current_action[const.sceneItemTransform][const.scaleY]
         response1 = client.call(requests.GetSceneItemTransform( sceneName=current_action[const.sceneName], sceneItemId=current_action[const.sceneItemId]))
