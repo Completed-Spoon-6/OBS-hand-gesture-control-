@@ -42,6 +42,11 @@ def intialize_camera():
 
     mode = 0
 
+    # Initialize the window first
+    cv.namedWindow('Hand Gesture Recognition', cv.WINDOW_NORMAL)  # Create a resizable window
+
+    # cap_width, cap_height = 640, 360  # Initial capture size
+    display_width, display_height = cap_width, cap_height
     while True:
         fps = cvFpsCalc.get()
 
@@ -49,6 +54,8 @@ def intialize_camera():
         key = cv.waitKey(10)
         if key == 27:  # ESC
             break
+
+
         number, mode = select_mode(key, mode)
 
         # Camera capture #####################################################
@@ -98,7 +105,9 @@ def intialize_camera():
         debug_image = draw_info(debug_image, fps, mode, number)
 
         # Screen reflection #############################################################
-        cv.imshow('Hand Gesture Recognition', debug_image)
+        # Resize the image for display according to the new dimensions
+        display_image = cv.resize(debug_image, (display_width, display_height))
+        cv.imshow('Hand Gesture Recognition', display_image)
 
     cap.release()
     cv.destroyAllWindows()
