@@ -55,8 +55,6 @@ def sendAction(hand_sign_text, palm, middle_finger_base):
 
         scale_x = current_action[const.sceneItemTransform][const.scaleX]
         scale_y = current_action[const.sceneItemTransform][const.scaleY]
-        response1 = client.call(requests.GetSceneItemTransform( sceneName=current_action[const.sceneName], sceneItemId=current_action[const.sceneItemId]))
-        print(response1)
-        response = client.call(requests.SetSceneItemTransform(sceneItemTransform={const.positionX: x , const.positionY: y }, sceneName=current_action[const.sceneName], sceneItemId=current_action[const.sceneItemId]))
-        print(response)
+
+        client.call(requests.SetSceneItemTransform(sceneItemTransform={const.positionX: x , const.positionY: y }, sceneName=current_action[const.sceneName], sceneItemId=current_action[const.sceneItemId]))
         client.call(requests.SetSceneItemEnabled(sceneItemId=current_action[const.sceneItemId], sceneName=current_action[const.sceneName], sceneItemEnabled=current_action[const.sceneItemEnabled]))
